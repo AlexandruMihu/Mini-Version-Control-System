@@ -18,7 +18,7 @@ def main():
         print("Initialized git directory")
     elif command == "cat-file" and sys.argv[2] == "-p":
         hash = sys.argv[3]
-        hashPath = f".git/objects/{hash[0:2]/hash[2:]}"
+        hashPath = f".git/objects/{hash[0:2]}/{hash[2:]}"
         with open(hashPath,"rb") as f:
             data = f.read()
             data = zlib.decompress(data)
