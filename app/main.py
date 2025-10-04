@@ -16,7 +16,7 @@ def main():
         with open(".git/HEAD", "w") as f:
             f.write("ref: refs/heads/main\n")
         print("Initialized git directory")
-    elif command == "cat-file" & sys.argv[2] == "-p":
+    elif command == "cat-file" and sys.argv[2] == "-p":
         hash = sys.argv[3]
         hashPath = f".git/objects/{hash[0:2]/hash[2:]}"
         with open(hashPath,"rb") as f:
