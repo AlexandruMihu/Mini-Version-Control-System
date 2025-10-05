@@ -79,7 +79,7 @@ def main():
         if not sys.argv[2] == "-w":
             raise RuntimeError(f"Unexpected flag #{sys.argv[2]}")
         hashObject(sys.argv[3]) 
-    elif command == "git ls-tree":
+    elif command == "ls-tree":
          lsTree(sys.argv)   
     else:
         raise RuntimeError(f"Unknown command #{command}")
