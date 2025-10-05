@@ -40,7 +40,7 @@ def lsTree(arguments):
     else:
         object_hash = arguments[2]
         
-    filepath = f"./git/objects/{object_hash[:2]}/{object_hash[2:]}"
+    filepath = f".git/objects/{object_hash[:2]}/{object_hash[2:]}"
     with open(filepath,"rb") as f:
         data  = f.read() 
         data = zlib.decompress(data)  
