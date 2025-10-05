@@ -1,6 +1,7 @@
 import sys
 import os
 import zlib
+from hashlib import sha1
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -26,8 +27,23 @@ def main():
             headerEnd = data.find(b"\x00")
             content = data[headerEnd + 1:].strip()
             print(content.decode("utf-8"),end="")
+            
     elif command == "hash-object" and sys.argv[2] == "-w":
-        fileName = sys.argv[3]       
+        if not sys.argv[2] == "-w":
+            raise RuntimeError(f"Unexpected flag #{sys.argv[2]}")
+        
+        with open(sys.argv[3],"rb") as f:
+            contents = f.read()
+            
+        header = f"blob {len(contents)}\x00".encode("utf-8")
+        hash = sha1(header+contents).hexdigest()
+        print(hash)
+        dname, fname = hash[:2], hash[2:]
+        dname = os.path.join(".git/objects",dname)
+        os.mkdir(dname)
+        with open(os.path.join(dname,fname),"wb") as f:
+            f.write(zlib.compress(header + contents))
+            
     else:
         raise RuntimeError(f"Unknown command #{command}")
 
