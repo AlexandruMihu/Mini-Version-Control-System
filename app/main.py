@@ -8,21 +8,7 @@ from urllib.parse import urlparse
 import urllib.request
 import struct
 from typing import List, Tuple, Dict
-
-# def get_mode(path):
-#     """Determine the mode for a given path."""
-#     if os.path.isdir(path):
-#         return "40000"  # Directory
-#     elif os.path.islink(path):
-#         return "120000"  # Symbolic link
-#     elif os.path.isfile(path):
-#         if os.access(path, os.X_OK):
-#             return "100755"  # Executable file
-#         else:
-#             return "100644"  # Regular file
-#     else:
-#         raise ValueError(f"Unknown file type for path: {path}")
-
+from commit import commitTree
 
 def init():
     os.mkdir(".git")
@@ -144,35 +130,7 @@ def writeTree(directory="."):
         f.write(compressed)
     return treeHash
 
-def commitTree(arguments):
-    treeHash =  arguments[2]
-    if "-p" in arguments:
-        pIndex = arguments.index("-p")
-        parentHash = arguments[pIndex + 1]
-    if "-m" in arguments:
-        mIndex = arguments.index("-m")
-        message = arguments[mIndex + 1]
-    author = "Alexandru Mihu <address@gmail.com>"
-    timeStamp = int(time.time())
-    timeZone = time.strftime("%z")
-    
-    authorTime = f"{author} {timeStamp} {timeZone}" 
-    
-    commitContent = f"tree {treeHash}\nparent {parentHash}\nauthor {authorTime}\ncommiter {authorTime}\n\n{message}\n"  
-    commitContentBytes = commitContent.encode("utf-8")
-    
-    header = f"commit {len(commitContentBytes)}\x00".encode("utf-8")
-    hashObject = hashlib.sha1()
-    storedData = header + commitContentBytes
-    hashObject.update(storedData)
-    sha1Hash = hashObject.hexdigest()
-    compressedData = zlib.compress(storedData)
-    dirPath = f".git/objects/{sha1Hash[:2]}"
-    if not os.path.exists(dirPath):
-        os.mkdir(dirPath)
-        with open(f"{dirPath}/{sha1Hash[2:]}","wb") as objFile:
-            objFile.write(compressedData)
-    print(sha1Hash) 
+ 
     
 def clone():
     remote = sys.argv[2]
@@ -411,8 +369,7 @@ def writePackfile(data: bytes, targetDir: str) -> None:
                 f.write(zlib.compress(store))
 
             processedObjects.add(sha)
-            return sha
-
+            return sha 
     for obj in objects:
         processObject(obj)
 
@@ -470,7 +427,10 @@ def main():
     elif command == "write-tree":
         print(writeTree("."))  
     elif command == "commit-tree":
-        result = commitTree(sys.argv)
+        treeHash = sys.argv[2]
+        parentHash = sys.argv[4] if "-p" in sys.argv else None
+        message = sys.argv[6] if "-m" in sys.argv else "No message"
+        print(commitTree(treeHash, parentHash, message))
     elif command == "clone":
         clone()
     else:
