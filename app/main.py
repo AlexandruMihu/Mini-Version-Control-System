@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import urllib.request
 import struct
 from typing import List, Tuple, Dict
-from commit import commitTree
+from .commit import commitTree
 
 def init():
     os.mkdir(".git")
