@@ -1,6 +1,7 @@
 import sys
 import os
 import zlib
+import hashlib
 from hashlib import sha1
 
 def init():
@@ -69,7 +70,60 @@ def lsTree(arguments):
     entries.sort()
     for entry in entries:
         print(entry)
-          
+        
+def hashObjectFile(filepath):
+    try:
+        with open(filepath, "rb") as f:
+            contents = f.read()
+        blob_data = b"blob " + str(len(contents)).encode("ascii") + b"\0" + contents
+        hash_value = hashlib.sha1(blob_data).hexdigest()
+        compressed = zlib.compress(blob_data)
+        dir_path = f".git/objects/{hash_value[:2]}"
+        os.makedirs(dir_path, exist_ok=True)
+        with open(f"{dir_path}/{hash_value[2:]}", "wb") as f:
+            f.write(compressed)
+        return hash_value
+    except FileNotFoundError:
+        return None
+    
+def writeTree(directory="."):
+    treeEntries = []
+    entries = []
+    
+    for entry in os.listdir(directory):
+        if entry == ".git":
+            continue
+        entryPath = os.path.join(directory,entry)
+        entries.append((entry,entryPath))
+    
+    entries.sort(key=lambda x:x[0])
+    
+    for entryName, entryPath in entries:
+        if os.path.isfile(entryPath):
+            blobHash = hashObjectFile(entryPath)
+            if blobHash:
+                mode = "100644"
+                treeEntries.append((mode,entryName,blobHash))
+        elif os.path.isdir(entryPath):
+            subtreeHash = writeTree(entryPath)
+            mode = "40000"
+            treeEntries.append((mode,entryName,subtreeHash))
+            
+    treeContent = b""
+    for mode, name,sha1Hex in treeEntries:
+        treeContent += mode.encode("ascii") + b" " + name.encode("utf-8") + b"\0"
+        sha1Binary = bytes.fromhex(sha1Hex)
+        treeContent += sha1Binary
+    
+    treeData = b"tree " + str(len(treeContent)).encode("ascii")+b"\0"+treeContent
+    treeHash = hashlib.sha1(treeData).hexdigest()
+    compressed = zlib.compress(treeData)
+    dirPath = f".git/object/{treeHash[:2]}"
+    os.makedirs(dirPath,exist_ok=True)
+    with open(f"{dirPath}/{treeHash[2:]}","wb") as f:
+        f.write(compressed)
+    return treeHash
+            
 def main():
     command = sys.argv[1]
     if command == "init":
@@ -83,7 +137,10 @@ def main():
             raise RuntimeError(f"Unexpected flag #{sys.argv[2]}")
         hashObject(sys.argv[3]) 
     elif command == "ls-tree":
-         lsTree(sys.argv)   
+         lsTree(sys.argv) 
+    elif command == "write-tree":
+        tree_hash = writeTree(".")
+        print(tree_hash)  
     else:
         raise RuntimeError(f"Unknown command #{command}")
 
