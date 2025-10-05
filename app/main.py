@@ -170,11 +170,9 @@ def main():
     elif command == "ls-tree":
          lsTree(sys.argv) 
     elif command == "write-tree":
-        tree_hash = writeTree(".")
-        print(tree_hash)  
+        print(writeTree("."))  
     elif command == "commit-tree":
-        commitTree = commitTree(sys.argv)
-        print(commitTree)
+        print(commitTree(sys.argv))
     else:
         raise RuntimeError(f"Unknown command #{command}")
 
