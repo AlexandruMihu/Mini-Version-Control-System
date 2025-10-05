@@ -471,7 +471,6 @@ def main():
         print(writeTree("."))  
     elif command == "commit-tree":
         result = commitTree(sys.argv)
-        print(result)
     elif command == "clone":
         clone()
     else:
