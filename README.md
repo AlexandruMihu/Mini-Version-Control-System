@@ -1,59 +1,199 @@
-[![progress-banner](https://backend.codecrafters.io/progress/git/85d37486-169b-47fd-a217-0fda64dd0dcc)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# Lightweight Git
 
-This is a starting point for Python solutions to the
-["Build Your Own Git" Challenge](https://codecrafters.io/challenges/git).
+A small, educational, **lightweight Python implementation** of essential Git internals: objects (blobs, trees, commits), repository initialization, a simple `clone` that downloads a packfile, and a few plumbing commands.
+This project is intended as a learning tool to demonstrate **how Git stores objects, writes trees, and creates commits**, not as a production replacement for `git`.
 
-In this challenge, you'll build a small Git implementation that's capable of
-initializing a repository, creating commits and cloning a public repository.
-Along the way we'll learn about the `.git` directory, Git objects (blobs,
-commits, trees etc.), Git's transfer protocols and more.
+---
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## Features
 
-# Passing the first stage
+* Initialize a minimal `.git` directory (`init`)
+* Hash and store blobs (`hash-object -w <file>`)
+* Read stored objects (`cat-file -p <hash>`)
+* Create tree objects from a working directory (`write-tree`)
+* List tree contents (`ls-tree <tree-hash>` / `ls-tree --name-only <tree-hash>`)
+* Create commit objects that reference a tree (and optional parent) (`commit-tree`)
+* Lightweight HTTP `clone` implementation that fetches refs, downloads a packfile, writes objects to `.git/objects`, and renders the default tree into the working directory
 
-The entry point for your Git implementation is in `app/main.py`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+**Implementation notes:** Uses only Python standard libraries (`os`, `zlib`, `hashlib`, `time`, `urllib.request`, `struct`, `urllib.parse`, etc.). Objects are stored under `.git/objects/` in the same layout as upstream Git.
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
+---
+
+## Installation
+
+This is a small script/package. You can use it in one of two ways:
+
+1. Run the script/module directly from the repository folder:
+
+   ```bash
+   python path/to/main.py <command> [args...]
+   ```
+
+2. Install as a package (recommended if you add packaging and entry points) and then run:
+
+   ```bash
+   python -m <your_package> <command> [args...]
+   ```
+
+*Tip: Add a simple `console_scripts` entrypoint or a small wrapper script if you want `mygit` on your `$PATH`.*
+
+---
+
+## Usage / CLI Reference
+
+The program accepts a first positional argument (the command) followed by command-specific arguments.
+
+```bash
+python main.py <command> [args...]
 ```
 
-That's all!
+### `init`
 
-# Stage 2 & beyond
+Create a minimal `.git` directory.
 
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `python (3.13)` installed locally
-1. Run `./your_program.sh` to run your Git implementation, which is implemented
-   in `app/main.py`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
-
-# Testing locally
-
-The `your_program.sh` script is expected to operate on the `.git` folder inside
-the current working directory. If you're running this inside the root of this
-repository, you might end up accidentally damaging your repository's `.git`
-folder.
-
-We suggest executing `your_program.sh` in a different folder when testing
-locally. For example:
-
-```sh
-mkdir -p /tmp/testing && cd /tmp/testing
-/path/to/your/repo/your_program.sh init
+```bash
+python main.py init
+# -> "Initialized git directory"
 ```
 
-To make this easier to type out, you could add a
-[shell alias](https://shapeshed.com/unix-alias/):
+Creates:
 
-```sh
-alias mygit=/path/to/your/repo/your_program.sh
+* `.git/objects/`
+* `.git/refs/`
+* `.git/HEAD` (points to `refs/heads/main`)
 
-mkdir -p /tmp/testing && cd /tmp/testing
-mygit init
+---
+
+### `hash-object -w <path>`
+
+Hash a file as a blob and write it into `.git/objects/`. Prints the object SHA.
+
+```bash
+python main.py hash-object -w README.md
+# -> prints SHA1 hash
 ```
+
+---
+
+### `cat-file -p <hash>`
+
+Read an object from `.git/objects/`, decompress, and pretty-print its content.
+
+```bash
+python main.py cat-file -p <sha1>
+```
+
+---
+
+### `write-tree`
+
+Walk the current directory (ignores `.git`) and write tree objects recursively. Prints the resulting tree hash.
+
+```bash
+python main.py write-tree
+# -> prints tree SHA
+```
+
+---
+
+### `ls-tree [--name-only] <tree-hash>`
+
+List entries of a tree object.
+
+* `ls-tree <tree-hash>` → prints `mode type sha\tname` lines (sorted).
+* `ls-tree --name-only <tree-hash>` → prints only file/directory names.
+
+```bash
+python main.py ls-tree <tree-hash>
+python main.py ls-tree --name-only <tree-hash>
+```
+
+*Note: The implementation expects `--name-only` before the hash.*
+
+---
+
+### `commit-tree <tree-hash> [-p <parent-hash>] [-m <message>]`
+
+Create a commit object referencing `tree-hash`. Optional parent and commit message. Prints the commit SHA.
+
+Examples:
+
+```bash
+# Simple commit with message
+python main.py commit-tree <tree-sha> -m "Initial commit"
+
+# Commit with parent
+python main.py commit-tree <tree-sha> -p <parent-sha> -m "Fix"
+```
+
+Commit object format:
+
+```
+tree <tree-sha>
+parent <parent-sha>    # optional
+author You <you@example.com> <timestamp> <tz>
+committer You <you@example.com> <timestamp> <tz>
+
+<message>
+```
+
+---
+
+### `clone <remote-url> [local-dir]`
+
+A small HTTP-based clone that:
+
+1. Queries `<remote-url>/info/refs?service=git-upload-pack`
+2. Requests `<remote-url>/git-upload-pack` to obtain a packfile
+3. Processes the packfile (supports commit/tree/blob and ref-deltas), writes objects into `.git/objects/`
+4. Writes `.git/HEAD` and default branch ref
+5. Renders the default tree into the working directory
+
+Example:
+
+```bash
+python main.py clone https://example.com/some-repo.git
+python main.py clone https://example.com/some-repo.git my-local-dir
+```
+
+---
+
+## Repository Layout
+
+What the code creates:
+
+```
+.git/
+  objects/   # two-letter dirs with zlib-compressed object files
+  refs/      # branch refs (writes default branch file)
+  HEAD       # text ref: refs/heads/main or branch ref
+```
+
+Objects are stored like Git: compressed zlib blobs with header `b"<type> <len>\0" + content`.
+
+---
+
+## Design & Implementation Notes
+
+* **Objects:** `hashObject` / `hashObjectFile` create blobs; `writeTree` builds trees; `commitTree` builds commits.
+* **Object format:** stored as header + content (compressed). SHA computed over raw header+content (before compression).
+* **Packfiles (clone):** parses upload-pack, decodes packfile, applies `ref_delta`s, writes objects to `.git/objects/`.
+* **Rendering:** `renderTree` reads a tree and writes files/dirs into the working directory.
+
+---
+
+## Limitations & Safety
+
+* **Not a Git replacement** — educational only.
+* Missing features: reflogs, index, branches, GC, pruning.
+* Minimal argument parsing (position-sensitive for `commit-tree` and `ls-tree`).
+* Clone supports only anonymous HTTP (no auth).
+* Clone writes files to disk (may overwrite existing files). Use a new directory.
+
+---
+
+## Troubleshooting
+
+* **`FileNotFoundError` for `.git/objects/...`** → Run `init` or `clone` first.
+* **`hash-object`** → Use `-w` flag.
+* **`commit-tree`** → Arguments must be in correct order.
