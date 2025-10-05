@@ -1,6 +1,6 @@
 import os, time, zlib, hashlib
 
-def commit_tree(treeHash, parentHash, message, author="You <you@example.com>"):
+def commitTree(treeHash, parentHash, message, author="You <you@example.com>"):
     timeStamp = int(time.time())
     timeZone = time.strftime("%z")
     authorTime = f"{author} {timeStamp} {timeZone}"
