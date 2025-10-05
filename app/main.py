@@ -173,7 +173,7 @@ def main():
         tree_hash = writeTree(".")
         print(tree_hash)  
     elif command == "commit-tree":
-        commitTree = writeTree(sys.argv)
+        commitTree = commitTree(sys.argv)
         print(commitTree)
     else:
         raise RuntimeError(f"Unknown command #{command}")
