@@ -1,31 +1,28 @@
 import os, time, zlib, hashlib
 
-def commitTree(arguments):
-    treeHash =  arguments[2]
-    if "-p" in arguments:
-        pIndex = arguments.index("-p")
-        parentHash = arguments[pIndex + 1]
-    if "-m" in arguments:
-        mIndex = arguments.index("-m")
-        message = arguments[mIndex + 1]
-    author = "Alexandru Mihu <address@gmail.com>"
+def commit_tree(treeHash, parentHash, message, author="You <you@example.com>"):
     timeStamp = int(time.time())
     timeZone = time.strftime("%z")
-    
-    authorTime = f"{author} {timeStamp} {timeZone}" 
-    
-    commitContent = f"tree {treeHash}\nparent {parentHash}\nauthor {authorTime}\ncommiter {authorTime}\n\n{message}\n"  
-    commitContentBytes = commitContent.encode("utf-8")
-    
-    header = f"commit {len(commitContentBytes)}\x00".encode("utf-8")
-    hashObject = hashlib.sha1()
-    storedData = header + commitContentBytes
-    hashObject.update(storedData)
-    sha1Hash = hashObject.hexdigest()
+    authorTime = f"{author} {timeStamp} {timeZone}"
+
+    commitContent = (
+        f"tree {treeHash}\n"
+        + (f"parent {parentHash}\n" if parentHash else "")
+        + f"author {authorTime}\n"
+        + f"committer {authorTime}\n\n"
+        + f"{message}\n"
+    )
+
+    commitBytes = commitContent.encode("utf-8")
+    header = f"commit {len(commitBytes)}\x00".encode("utf-8")
+    storedData = header + commitBytes
+
+    sha1Hash = hashlib.sha1(storedData).hexdigest()
     compressedData = zlib.compress(storedData)
+
     dirPath = f".git/objects/{sha1Hash[:2]}"
-    if not os.path.exists(dirPath):
-        os.mkdir(dirPath)
-        with open(f"{dirPath}/{sha1Hash[2:]}","wb") as objFile:
-            objFile.write(compressedData)
-    print(sha1Hash)
+    os.makedirs(dirPath, exist_ok=True)
+    with open(f"{dirPath}/{sha1Hash[2:]}", "wb") as objFile:
+        objFile.write(compressedData)
+
+    return sha1Hash
