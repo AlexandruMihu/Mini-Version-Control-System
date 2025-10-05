@@ -16,6 +16,7 @@ def main():
         with open(".git/HEAD", "w") as f:
             f.write("ref: refs/heads/main\n")
         print("Initialized git directory")
+        
     elif command == "cat-file" and sys.argv[2] == "-p":
         hash = sys.argv[3]
         hashPath = f".git/objects/{hash[0:2]}/{hash[2:]}"
@@ -25,7 +26,8 @@ def main():
             headerEnd = data.find(b"\x00")
             content = data[headerEnd + 1:].strip()
             print(content.decode("utf-8"),end="")
-            
+    elif command == "hash-object" and sys.argv[2] == "-w":
+        fileName = sys.argv[3]       
     else:
         raise RuntimeError(f"Unknown command #{command}")
 
