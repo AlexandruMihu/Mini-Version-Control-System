@@ -9,14 +9,8 @@ import urllib.request
 import struct
 from typing import List, Tuple, Dict
 from .commit import commitTree
+from .repo import init
 
-def init():
-    os.mkdir(".git")
-    os.mkdir(".git/objects")
-    os.mkdir(".git/refs")
-    with open(".git/HEAD", "w") as f:
-        f.write("ref: refs/heads/main\n")
-    print("Initialized git directory")
 
 def catFile(hash):
     hashPath = f".git/objects/{hash[0:2]}/{hash[2:]}"
@@ -34,6 +28,7 @@ def hashObject(filepath):
     header = f"blob {len(data)}\x00".encode("utf-8")
     hash = sha1(header+data).hexdigest()
     print(hash)
+    
     dname, fname = hash[:2], hash[2:]
     dname = os.path.join(".git/objects",dname)
     os.mkdir(dname)
@@ -421,7 +416,7 @@ def main():
     elif command == "hash-object":
         if not sys.argv[2] == "-w":
             raise RuntimeError(f"Unexpected flag #{sys.argv[2]}")
-        hashObject(sys.argv[3]) 
+        hashObjectFile(sys.argv[3]) 
     elif command == "ls-tree":
          lsTree(sys.argv) 
     elif command == "write-tree":
