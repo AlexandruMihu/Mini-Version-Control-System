@@ -35,8 +35,11 @@ def hashObject(filepath):
 
 def lsTree(arguments):
     is_name_only = "--name-only" in arguments
-    object_hash = is_name_only if arguments[2] else arguments[3]
-    
+    if is_name_only:
+        object_hash = arguments[3]
+    else:
+        object_hash = arguments[2]
+        
     filepath = f"./git/objects/{object_hash[:2]}/{object_hash[2:]}"
     with open(filepath,"rb") as f:
         data  = f.read() 
@@ -62,7 +65,7 @@ def lsTree(arguments):
             row = f"{mode} {typeMode} {sha}\t{name}"
             entries.append(row)
         endOfEntry = nullIndex + 21
-        content = content[endOfEntry]
+        content = content[endOfEntry:]
     entries.sort()
     for entry in entries:
         print(entry)
