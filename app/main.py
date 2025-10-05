@@ -101,7 +101,7 @@ def writeTree(directory="."):
     
     for entryName, entryPath in entries:
         if os.path.isfile(entryPath):
-            blobHash = hashObjectFile(entryPath)
+            blobHash = hashObject(entryPath)
             if blobHash:
                 mode = "100644"
                 treeEntries.append((mode,entryName,blobHash))
@@ -416,7 +416,7 @@ def main():
     elif command == "hash-object":
         if not sys.argv[2] == "-w":
             raise RuntimeError(f"Unexpected flag #{sys.argv[2]}")
-        hashObjectFile(sys.argv[3]) 
+        hashObject(sys.argv[3]) 
     elif command == "ls-tree":
          lsTree(sys.argv) 
     elif command == "write-tree":
