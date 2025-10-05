@@ -101,7 +101,7 @@ def writeTree(directory="."):
     
     for entryName, entryPath in entries:
         if os.path.isfile(entryPath):
-            blobHash = hashObject(entryPath)
+            blobHash = hashObjectFile(entryPath)
             if blobHash:
                 mode = "100644"
                 treeEntries.append((mode,entryName,blobHash))
