@@ -153,7 +153,7 @@ def commitTree(arguments):
         os.mkdir(dirPath)
         with open(f"{dirPath}/{sha1Hash[2:]}","wb") as objFile:
             objFile.write(compressedData)
-    print(sha1Hash)
+    return sha1Hash
     
 def main():
     command = sys.argv[1]
