@@ -189,7 +189,7 @@ def clone():
     print(f"Cloning {remote} to {local}")
     
     caps,refs = getRefs(remote)
-    defaultBranch = caps.get("defaultBranch","refs/heads/main")
+    defaultBranch = caps.get("default_branch","refs/heads/main")
     
     defaultRefSha = None
     for sha,ref in refs:
