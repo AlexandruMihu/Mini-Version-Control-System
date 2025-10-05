@@ -118,7 +118,7 @@ def writeTree(directory="."):
     treeData = b"tree " + str(len(treeContent)).encode("ascii")+b"\0"+treeContent
     treeHash = hashlib.sha1(treeData).hexdigest()
     compressed = zlib.compress(treeData)
-    dirPath = f".git/object/{treeHash[:2]}"
+    dirPath = f".git/objects/{treeHash[:2]}"
     os.makedirs(dirPath,exist_ok=True)
     with open(f"{dirPath}/{treeHash[2:]}","wb") as f:
         f.write(compressed)
